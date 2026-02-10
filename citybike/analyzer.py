@@ -91,24 +91,60 @@ class BikeShareSystem:
 
         # --- Step 2: Parse dates ---
         # TODO: convert start_time, end_time to datetime
-        # self.trips["start_time"] = pd.to_datetime(...)
+        self.trips["start_time"] = pd.to_datetime(self.trips["start_time"])
+        self.trips["end_time"] = pd.to_datetime(self.trips["end_time"])
 
         # --- Step 3: Convert numeric columns ---
         # TODO: ensure duration_minutes and distance_km are float
+        self.trips["duration_minutes"]=pd.to_numeric(self.trips["duration_minutes"])
+        self.trips["distance_km"]=pd.to_numeric(self.trips["distance_km"])
+
+        
 
         # --- Step 4: Handle missing values ---
         # TODO: decide on a strategy and document it
         # Example: self.trips["duration_minutes"].fillna(..., inplace=True)
+        # self.trips["duration_minutes"].fillna(..., inplace=True)
+        self.trips = self.trips.dropna(subset=['duration_minutes', 'distance_km','start_time','end_time'])
+         
+        
 
         # --- Step 5: Remove invalid entries ---
         # TODO: drop rows where end_time < start_time
+        self.trips=self.trips[self.trips['end_time'] >= self.trips['start_time']]
+        
 
         # --- Step 6: Standardize categoricals ---
         # TODO: e.g. self.trips["status"].str.lower().str.strip()
+        self.trips["user_type"]=self.trips["user_type"].str.lower().str.strip()
+        
+    
 
         # --- Step 7: Export cleaned datasets ---
-        # self.trips.to_csv(DATA_DIR / "trips_clean.csv", index=False)
-        # self.stations.to_csv(DATA_DIR / "stations_clean.csv", index=False)
+
+        self.trips.info()
+        self.stations.info()
+        self.maintenance.info()
+        # print("Missing values in trips:")
+        # print(self.trips.isna().sum())
+        # print("Missing values in stations:")
+        # print(self.stations.isna().sum())
+        # print("Missing values in maintenance:")
+        # print(self.maintenance.isna().sum())
+        #fill status in trips with 'unknown'
+        self.trips['status']=self.trips['status'].fillna('unknown')
+        #dropp missing vaölue in maintenance in cost column
+        self.maintenance=self.maintenance.dropna(subset=['cost'])
+        
+        print(self.trips.isna().sum())
+        print(self.maintenance.isna().sum())
+        
+        self.trips.to_csv(DATA_DIR / "trips_clean.csv", index=False)
+        self.stations.to_csv(DATA_DIR / "stations_clean.csv", index=False)
+        self.maintenance.to_csv(DATA_DIR / "maintenance_clean.csv", index=False)
+
+        
+        
 
         print("Cleaning complete.")
 
