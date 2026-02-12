@@ -18,6 +18,9 @@ from analyzer import BikeShareSystem
 from visualization import plot_trips_per_station
 
 
+
+
+
 def main() -> None:
     """Run the complete CityBike analytics pipeline."""
 
@@ -44,6 +47,21 @@ def main() -> None:
 
     # TODO: call additional analytics methods here
     # e.g. system.top_start_stations(), system.peak_usage_hours(), ...
+    
+    print("\nTop Start Stations:")
+    print(system.top_start_stations())
+
+    print("\nPeak Usage Hours:")
+    print(system.peak_usage_hours())
+
+    print("\nBusiest Day of Week:")
+    print(system.busiest_day_of_week())
+
+    print("\nAverage Distance by User Type:")
+    print(system.avg_distance_by_user_type())
+
+    print("\nMaintenance Cost by Bike Type:")
+    print(system.maintenance_cost_by_bike_type())
 
     # Step 4b — Pricing (Strategy Pattern + NumPy vectorized fares)
     # The pricing strategies define the business rules (per-minute rate, etc.),
@@ -81,6 +99,9 @@ def main() -> None:
 
     # Step 6 — Report
     # TODO: system.generate_summary_report()
+    # Step 6 — Report
+    print("\n>>> Generating report …")
+    system.generate_summary_report()
 
     print("\n>>> Done! Check output/ for results.")
 

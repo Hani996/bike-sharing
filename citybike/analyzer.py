@@ -105,6 +105,11 @@ class BikeShareSystem:
         # TODO: decide on a strategy and document it
         # Example: self.trips["duration_minutes"].fillna(..., inplace=True)
         # self.trips["duration_minutes"].fillna(..., inplace=True)
+        # Missing values strategy:
+        # - Trips with missing duration_minutes, distance_km, start_time, or end_time
+        #   are removed because they cannot be used in time or distance-based analysis.
+        # - Missing status values are filled with 'unknown'.
+        # - Maintenance records with missing cost are dropped.
         self.trips = self.trips.dropna(subset=['duration_minutes', 'distance_km','start_time','end_time'])
          
         
@@ -167,60 +172,104 @@ class BikeShareSystem:
 
     def top_start_stations(self, n: int = 10) -> pd.DataFrame:
         """Q2: Top *n* most popular start stations.
+        
+        
 
         TODO: use value_counts() or groupby on start_station_id,
               merge with station names.
+              
         """
-        # Example start:
-        # counts = self.trips["start_station_id"].value_counts().head(n)
-        raise NotImplementedError("top_start_stations")
+        
+        # Get value counts for start_station_id and convert to DataFrame
+        counts = self.trips["start_station_id"].value_counts().head(n).reset_index()
+        counts.columns = ["start_station_id", "trip_count"]
+
+        
+        # Merge with station names
+        result = counts.merge(
+            self.stations[["station_id", "station_name"]], 
+            left_on="start_station_id", 
+            right_on="station_id",
+            how="left"
+        )
+        
+        return result[["station_name", "trip_count"]]
+        
 
     def peak_usage_hours(self) -> pd.Series:
         """Q3: Trip count by hour of day.
 
         TODO: extract hour from start_time and count trips per hour.
         """
-        raise NotImplementedError("peak_usage_hours")
+        # self.trips["hour"]=self.trips["start_time"].dt.hour
+        # return self.trips["hour"].value_counts().sort_index()
+        df = self.trips.copy()
+        df["hour"] = df["start_time"].dt.hour
+        return df["hour"].value_counts().sort_index()
+    
+        
+        # raise NotImplementedError("peak_usage_hours")
 
     def busiest_day_of_week(self) -> pd.Series:
         """Q4: Trip count by day of week.
 
         TODO: extract day-of-week from start_time, count.
         """
-        raise NotImplementedError("busiest_day_of_week")
+        self.trips["start_time"] = pd.to_datetime(self.trips["start_time"])
+        self.trips["day"]=self.trips["start_time"].dt.day_name()
+        return self.trips["day"].value_counts().sort_index()
+    
+        
+        # print(self.trips["start_time"].dtype)
+        
+        # raise NotImplementedError("busiest_day_of_week")
 
     def avg_distance_by_user_type(self) -> pd.Series:
         """Q5: Average trip distance grouped by user type."""
-        raise NotImplementedError("avg_distance_by_user_type")
+        return self.trips.groupby("user_type")["distance_km"].mean().round(2)
+        # raise NotImplementedError("avg_distance_by_user_type")
 
     def monthly_trip_trend(self) -> pd.Series:
         """Q7: Monthly trip counts over time.
 
         TODO: extract year-month from start_time, group, count.
         """
-        raise NotImplementedError("monthly_trip_trend")
+        self.trips["year_month"]=self.trips["start_time"].dt.to_period("M")
+        return self.trips["year_month"].value_counts().sort_index()
+        # raise NotImplementedError("monthly_trip_trend")
 
     def top_active_users(self, n: int = 15) -> pd.DataFrame:
         """Q8: Top *n* most active users by trip count.
 
         TODO: group by user_id, count trips, sort descending.
         """
-        raise NotImplementedError("top_active_users")
+        counts = self.trips["user_id"].value_counts().head(n)
+        return counts.to_frame().reset_index().rename(columns={"user_id": "user_id", 0: "trip_count"})
+        # raise NotImplementedError("top_active_users")
 
     def maintenance_cost_by_bike_type(self) -> pd.Series:
         """Q9: Total maintenance cost per bike type.
 
         TODO: group maintenance by bike_type, sum cost.
         """
-        raise NotImplementedError("maintenance_cost_by_bike_type")
+        return self.maintenance.groupby("bike_type")["cost"].sum().round(2)
+        # raise NotImplementedError("maintenance_cost_by_bike_type")
 
     def top_routes(self, n: int = 10) -> pd.DataFrame:
         """Q10: Most common start→end station pairs.
+        
 
         TODO: group by (start_station_id, end_station_id), count, sort.
         """
-        raise NotImplementedError("top_routes")
-
+        route_counts = self.trips.groupby(["start_station_id", "end_station_id"]).size()
+        top_routes = route_counts.nlargest(n)
+        top_routes_df = top_routes.reset_index(name="trip_count")
+        # Merge with station names for start and end stations
+        start_stations = self.stations[["station_id", "station_name"]].rename(columns={"station_id": "start_station_id", "station_name": "start_station_name"})
+        end_stations = self.stations[["station_id", "station_name"]].rename(columns={"station_id": "end_station_id", "station_name": "end_station_name"})
+        result = top_routes_df.merge(start_stations, on="start_station_id", how="left")
+        result = result.merge(end_stations, on="end_station_id", how="left")
+        return result[["start_station_name", "end_station_name", "trip_count"]]
     # ------------------------------------------------------------------
     # Add more analytics methods here (Q6, Q11–Q14)
     # ------------------------------------------------------------------
@@ -253,21 +302,30 @@ class BikeShareSystem:
 
         # --- Q2: Top start stations ---
         # TODO: uncomment once top_start_stations() is implemented
-        # top_stations = self.top_start_stations()
-        # lines.append("\n--- Top 10 Start Stations ---")
-        # lines.append(top_stations.to_string(index=False))
+        top_stations = self.top_start_stations()
+        lines.append("\n--- Top 10 Start Stations ---")
+        lines.append(top_stations.to_string(index=False))
 
         # --- Q3: Peak usage hours ---
         # TODO: uncomment once peak_usage_hours() is implemented
-        # hours = self.peak_usage_hours()
-        # lines.append("\n--- Peak Usage Hours ---")
-        # lines.append(hours.to_string())
+        hours = self.peak_usage_hours()
+        lines.append("\n--- Peak Usage Hours ---")
+        lines.append(hours.to_string())
+        # --- Q4: Busiest days of week ---
+        days = self.busiest_day_of_week()
+        lines.append("\n--- Busiest Days of Week ---")
+        lines.append(days.to_string())
+        
+        # --- Q5: Average distance by user type ---
+        avg_dist = self.avg_distance_by_user_type()
+        lines.append("\n--- Avg Distance by User Type ---")
+        lines.append(avg_dist.to_string())
 
         # --- Q9: Maintenance cost by bike type ---
         # TODO: uncomment once maintenance_cost_by_bike_type() is implemented
-        # maint_cost = self.maintenance_cost_by_bike_type()
-        # lines.append("\n--- Maintenance Cost by Bike Type ---")
-        # lines.append(maint_cost.to_string())
+        maint_cost = self.maintenance_cost_by_bike_type()
+        lines.append("\n--- Maintenance Cost by Bike Type ---")
+        lines.append(maint_cost.to_string())
 
         # TODO: add more sections for Q4–Q8, Q10–Q14 …
 

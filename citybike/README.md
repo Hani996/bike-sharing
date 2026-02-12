@@ -52,7 +52,7 @@ pip install -r requirements.txt
 python generate_data.py
 
 # 5. Run the pipeline
-python main.py
+python main.
 ```
 
 ## Running Tests
@@ -85,3 +85,4 @@ pytest tests/ -v
 ## License
 
 For educational use only.
+py
