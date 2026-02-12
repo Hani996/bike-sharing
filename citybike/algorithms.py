@@ -92,7 +92,20 @@ def insertion_sort(data: list[Any], key: Callable = lambda x: x) -> list[Any]:
         - For each element, shift larger elements to the right
         - Insert the current element at the correct position
     """
-    raise NotImplementedError("insertion_sort")
+    def insertion_sort(data: list[Any], key: Callable = lambda x: x) -> list[Any]:
+    # """Sort *data* using the insertion-sort algorithm."""
+     sorted_data = list(data)  # نسخ القائمة لتجنب تعديل الأصلي
+
+     for i in range(1, len(sorted_data)):
+        current = sorted_data[i]
+        j = i - 1
+        while j >= 0 and key(sorted_data[j]) > key(current):
+            sorted_data[j + 1] = sorted_data[j]  # نحرك العنصر لليمين
+            j -= 1
+        sorted_data[j + 1] = current  # وضع العنصر الحالي في مكانه الصحيح
+
+     return sorted_data
+    
 
 
 # ---------------------------------------------------------------------------
@@ -128,6 +141,16 @@ def binary_search(
 
         # TODO: compare mid_val with target and adjust low/high
         # ----- your code here -----
+        
+        
+        if mid_val == target:
+            return mid
+        elif mid_val < target:
+            low = mid + 1
+        else:
+            high = mid - 1
+
+
         pass
 
     return None
@@ -157,8 +180,14 @@ def linear_search(
         Space — O(1)
 
     TODO: implement the linear scan.
+    
+    
     """
-    raise NotImplementedError("linear_search")
+    for i, item in enumerate(data):
+        if key(item) == target:
+            return i
+    return None
+    
 
 
 # ---------------------------------------------------------------------------
@@ -200,4 +229,14 @@ def benchmark_search(
 
     TODO: implement once binary_search and linear_search are complete.
     """
-    raise NotImplementedError("benchmark_search")
+    sorted_data = sorted(data, key=key)
+    binary_time = timeit.timeit(lambda: binary_search(sorted_data, target, key=key), number=repeats)
+    linear_time = timeit.timeit(lambda: linear_search(sorted_data, target, key=key), number=repeats)
+    builtin_time = timeit.timeit(lambda: sorted_data.index(target), number=repeats)
+
+    return {
+        "binary_search_ms": round(binary_time / repeats * 1000, 2),
+        "linear_search_ms": round(linear_time / repeats * 1000, 2),
+        "builtin_in_ms": round(builtin_time / repeats * 1000, 2),
+    }
+
