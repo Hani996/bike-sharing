@@ -1,5 +1,5 @@
 ============================================================
-  CityBike — Summary Report
+  CityBike ï¿½ Summary Report
 ============================================================
 
 --- Overall Summary ---
@@ -13,6 +13,7 @@
    Riverside Park         109
     Market Square         107
       Harbor View         105
+      
         City Hall         103
          Lakeside         103
 Business District         103
