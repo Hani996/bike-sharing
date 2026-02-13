@@ -162,16 +162,38 @@ class ElectricBike(Bike):
     ) -> None:
         super().__init__(bike_id=bike_id, bike_type="electric", status=status)
         # TODO: validate battery_level (0-100) and max_range_km (>0)
+        if not (0 <= battery_level <= 100):
+            raise ValueError("battery_level must be between 0 and 100")
+
+        if max_range_km <= 0:
+            raise ValueError("max_range_km must be positive")
+
+        self._battery_level = battery_level
+        self._max_range_km = max_range_km
         # TODO: store as private attributes with @property access
+    @property
+    def battery_level(self) -> float:
+        return self._battery_level
+
+    @property
+    def max_range_km(self) -> float:
+        return self._max_range_km
+
         pass
 
     def __str__(self) -> str:
         # TODO: return a user-friendly string
-        return f"ElectricBike({self.id})"
+        # return f"ElectricBike({self.id})"
+    
+        return f"ElectricBike({self.id}, battery={self.battery_level}%)"
 
     def __repr__(self) -> str:
         # TODO: return a debug-friendly string
-        return f"ElectricBike(bike_id={self.id!r})"
+        return (
+            f"ElectricBike(bike_id={self.id!r}, battery_level={self.battery_level}, "
+            f"max_range_km={self.max_range_km}, status={self.status!r})"
+        )
+        # return f"ElectricBike(bike_id={self.id!r})"
 
 
 # ---------------------------------------------------------------------------
@@ -197,6 +219,19 @@ class Station(Entity):
     ) -> None:
         super().__init__(id=station_id)
         # TODO: validate and store attributes
+        
+        if capacity <= 0:
+            raise ValueError("capacity must be positive")
+
+        if not (-90 <= latitude <= 90):
+            raise ValueError("latitude must be between -90 and 90")
+
+        if not (-180 <= longitude <= 180):
+            raise ValueError("longitude must be between -180 and 180")
+        self._name = name
+        self._capacity = capacity
+        self._latitude = latitude
+        self._longitude = longitude
         pass
 
     def __str__(self) -> str:
@@ -230,6 +265,13 @@ class User(Entity):
     ) -> None:
         super().__init__(id=user_id)
         # TODO: validate and store attributes
+        if "@" not in email:
+            raise ValueError("Invalid email")
+
+        self._name = name
+        self._email = email
+        self._user_type = user_type
+
         pass
 
     def __str__(self) -> str:
@@ -258,6 +300,10 @@ class CasualUser(User):
     ) -> None:
         super().__init__(user_id=user_id, name=name, email=email, user_type="casual")
         # TODO: validate and store day_pass_count
+        if day_pass_count < 0:
+            raise ValueError("day_pass_count must be >= 0")
+
+        self._day_pass_count = day_pass_count
         pass
 
     def __str__(self) -> str:
@@ -290,6 +336,16 @@ class MemberUser(User):
     ) -> None:
         super().__init__(user_id=user_id, name=name, email=email, user_type="member")
         # TODO: validate and store attributes
+        if membership_end <= membership_start:
+            raise ValueError("membership_end must be after start")
+
+        if tier not in ("basic", "premium"):
+            raise ValueError("tier must be basic or premium")
+        
+        self._membership_start = membership_start
+        self._membership_end = membership_end
+        self._tier = tier
+
         pass
 
     def __str__(self) -> str:
@@ -328,13 +384,29 @@ class Trip:
         distance_km: float,
     ) -> None:
         # TODO: validate and store attributes
+        if distance_km < 0:
+            raise ValueError("distance must be >= 0")
+
+        if end_time < start_time:
+            raise ValueError("end_time must be after start_time")
+
+        self.trip_id = trip_id
+        self.user = user
+        self.bike = bike
+        self.start_station = start_station
+        self.end_station = end_station
+        self.start_time = start_time
+        self.end_time = end_time
+        self.distance_km = distance_km
         pass
 
     @property
     def duration_minutes(self) -> float:
         """Calculate trip duration in minutes from start and end times."""
         # TODO: compute from end_time - start_time
-        return 0.0
+        delta = self.end_time - self.start_time
+        return delta.total_seconds() / 60
+        
 
     def __str__(self) -> str:
         # TODO
@@ -376,6 +448,19 @@ class MaintenanceRecord:
         description: str = "",
     ) -> None:
         # TODO: validate and store attributes
+        if maintenance_type not in self.VALID_TYPES:
+            raise ValueError("Invalid maintenance type")
+        
+        self.record_id = record_id
+        self.bike = bike
+        self.date = date
+        self.maintenance_type = maintenance_type
+        self.cost = cost
+        self.description = description
+
+        if cost < 0:
+            raise ValueError("cost must be >= 0")
+
         pass
 
     def __str__(self) -> str:
