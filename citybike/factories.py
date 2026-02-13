@@ -68,4 +68,26 @@ def create_user(data: dict) -> User:
         A CasualUser or MemberUser instance.
     """
     # TODO: implement factory logic (similar to create_bike above)
-    raise NotImplementedError("create_user")
+    def create_user(data: dict) -> User:
+     """Create a User (CasualUser or MemberUser) from a data dictionary."""
+
+    user_type = data.get("user_type", "").lower()
+
+    if user_type == "casual":
+        return CasualUser(
+            user_id=data["user_id"],
+            name=data.get("name", "Unknown"),
+            email=data.get("email", "unknown@example.com"),
+        )
+    elif user_type == "member":
+        return MemberUser(
+            user_id=data["user_id"],
+            name=data.get("name", "Unknown"),
+            email=data.get("email", "unknown@example.com"),
+            membership_level=data.get("membership_level", "standard"),
+            start_date=data.get("start_date"),
+            end_date=data.get("end_date"),
+        )
+    else:
+        raise ValueError(f"Unknown user_type: {user_type!r}")
+    # raise NotImplementedError("create_user")
