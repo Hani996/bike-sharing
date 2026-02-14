@@ -18,7 +18,14 @@ import numpy as np
 def station_distance_matrix(
     latitudes: np.ndarray, longitudes: np.ndarray
 ) -> np.ndarray:
-    """Compute pairwise Euclidean distances between stations.
+    
+    
+    
+    lat_diff = latitudes[:, np.newaxis] - latitudes[np.newaxis, :]
+    lon_diff = longitudes[:, np.newaxis] - longitudes[np.newaxis, :]
+    return np.sqrt(lat_diff**2 + lon_diff**2)
+
+"""Compute pairwise Euclidean distances between stations.
 
     Uses a simplified flat-earth distance model:
         d = sqrt((lat2 - lat1)^2 + (lon2 - lon1)^2)
@@ -48,7 +55,8 @@ def station_distance_matrix(
     # Step 3: combine with Euclidean formula
     # np.sqrt(lat_diff**2 + lon_diff**2)
 
-    raise NotImplementedError("station_distance_matrix")
+
+#  raise NotImplementedError("station_distance_matrix")
 
 
 # ---------------------------------------------------------------------------
@@ -66,11 +74,19 @@ def trip_duration_stats(durations: np.ndarray) -> dict[str, float]:
 
     TODO: use NumPy functions (np.mean, np.median, np.std, np.percentile).
     """
+    
+    
     # Example (partially done):
     return {
         "mean": float(np.mean(durations)),
         "median": float(np.median(durations)),
         "std": float(np.std(durations)),
+        "p25": float(np.percentile(durations, 25)),
+        "p75": float(np.percentile(durations, 75)),
+        "p90": float(np.percentile(durations, 90)),
+
+
+
         # TODO: add p25, p75, p90 using np.percentile
     }
 
@@ -102,8 +118,16 @@ def detect_outliers_zscore(
         4. Compute z-scores:  z = (values - mean) / std
         5. Return boolean:    np.abs(z) > threshold
     """
+    mean = np.mean(values)
+    std = np.std(values)
 
-    raise NotImplementedError("detect_outliers_zscore")
+    if std == 0:
+        return np.zeros_like(values, dtype=bool)
+
+    z = (values - mean) / std
+    return np.abs(z) > threshold
+
+    # raise NotImplementedError("detect_outliers_zscore")
 
 
 # ---------------------------------------------------------------------------
@@ -150,5 +174,7 @@ def calculate_fares(
         # trip 2: 1.0 + 0.15*20 + 0.10*5.0 = 4.50
         # trip 3: 1.0 + 0.15*30 + 0.10*8.0 = 6.30
     """
+    
+    return unlock_fee + per_minute * durations + per_km * distances
 
     raise NotImplementedError("calculate_fares")
